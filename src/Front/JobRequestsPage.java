@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+// Fetch and display job requests for a specific job
 public class JobRequestsPage extends JFrame {
 
     private JPanel contentPane;
@@ -45,7 +46,19 @@ public class JobRequestsPage extends JFrame {
             }
         });
         buttonPanel.add(backButton);
+        // Add button to navigate to accepted resumes page
+        JButton viewAcceptedResumesButton = new JButton("View Accepted Resumes");
+        viewAcceptedResumesButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                AcceptedResumesPage acceptedResumesPage = new AcceptedResumesPage(jobId);
+                acceptedResumesPage.setVisible(true);
+            }
+        });
+        buttonPanel.add(viewAcceptedResumesButton);
+
         contentPane.add(buttonPanel, BorderLayout.SOUTH);
+
     }
 
     private void fetchAndDisplayRequests(int jobId) {
@@ -61,7 +74,7 @@ public class JobRequestsPage extends JFrame {
             while (rs.next()) {
                 String employeeName = rs.getString("employee_name");
                 String resumeLink = rs.getString("resume_link");
-                addRequestToPanel(employeeName, resumeLink, requestsPanel);
+                addRequestToPanel(employeeName, resumeLink, requestsPanel, jobId);
             }
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Error fetching job requests for job ID: " + jobId, e);
@@ -76,7 +89,7 @@ public class JobRequestsPage extends JFrame {
         }
     }
 
-    private void addRequestToPanel(String employeeName, String resumeLink, JPanel panel) {
+    private void addRequestToPanel(String employeeName, String resumeLink, JPanel panel, int jobId) {
         JPanel requestPanel = new JPanel();
         requestPanel.setLayout(new BorderLayout(5, 5));
         requestPanel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
@@ -84,8 +97,85 @@ public class JobRequestsPage extends JFrame {
         JLabel resumeLabel = new JLabel("Resume Link: " + resumeLink);
         requestPanel.add(nameLabel, BorderLayout.NORTH);
         requestPanel.add(resumeLabel, BorderLayout.CENTER);
+
+        JButton rejectButton = new JButton("Reject");
+        rejectButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                rejectResume(jobId, employeeName, resumeLink);
+                panel.remove(requestPanel); // Remove the request from the panel
+                panel.revalidate();
+                panel.repaint();
+            }
+        });
+
+        JButton acceptButton = new JButton("Accept");
+        acceptButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                acceptResume(jobId, employeeName, resumeLink);
+                panel.remove(requestPanel); // Remove the request from the panel
+                panel.revalidate();
+                panel.repaint();
+            }
+        });
+
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttonPanel.add(rejectButton);
+        buttonPanel.add(acceptButton);
+        requestPanel.add(buttonPanel, BorderLayout.SOUTH);
+
         panel.add(requestPanel);
         panel.revalidate();
         panel.repaint();
+    }
+
+    private void rejectResume(int jobId, String employeeName, String resumeLink) {
+        Connection conn = null;
+        try {
+            conn = DBConnection.getConnection();
+            String sql = "DELETE FROM resumes WHERE job_id = ? AND employee_name = ? AND resume_link = ?";
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1, jobId);
+            pstmt.setString(2, employeeName);
+            pstmt.setString(3, resumeLink);
+            pstmt.executeUpdate();
+            JOptionPane.showMessageDialog(contentPane, "Resume rejected successfully.");
+        } catch (SQLException ex) {
+            LOGGER.log(Level.SEVERE, "Error rejecting resume", ex);
+            JOptionPane.showMessageDialog(contentPane, "Error rejecting resume. Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException ex) {
+                    LOGGER.log(Level.SEVERE, "Error closing connection", ex);
+                }
+            }
+        }
+    }
+
+    private void acceptResume(int jobId, String employeeName, String resumeLink) {
+        Connection conn = null;
+        try {
+            conn = DBConnection.getConnection();
+            String sql = "INSERT INTO accepted_resumes (job_id, employee_name, resume_link) VALUES (?, ?, ?)";
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1, jobId);
+            pstmt.setString(2, employeeName);
+            pstmt.setString(3, resumeLink);
+            pstmt.executeUpdate();
+            JOptionPane.showMessageDialog(contentPane, "Resume accepted successfully.");
+            // You can navigate to a new page to display accepted resumes here
+        } catch (SQLException ex) {
+            LOGGER.log(Level.SEVERE, "Error accepting resume", ex);
+            JOptionPane.showMessageDialog(contentPane, "Error accepting resume. Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException ex) {
+                    LOGGER.log(Level.SEVERE, "Error closing connection", ex);
+                }
+            }
+        }
     }
 }

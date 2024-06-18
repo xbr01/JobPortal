@@ -17,15 +17,12 @@ public class JobDetails_2 extends JFrame {
     private int jobId;
     private int employeeId;
     private String employeeName;
-    private JTextField resumeLinkField;
 
     public JobDetails_2(EmployeePage employeePage, int jobId, String jobTitle, int employeeId, String employeeName) {
         this.employeePage = employeePage;
         this.jobId = jobId;
         this.employeeId = employeeId;
         this.employeeName = employeeName;
-
-        System.out.println("Creating JobDetails_2 with jobId: " + jobId + ", jobTitle: " + jobTitle); // Debug statement
 
         setTitle("Job Details: " + jobTitle);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -79,11 +76,6 @@ public class JobDetails_2 extends JFrame {
         detailsPanel.add(experienceLabel);
         JLabel experienceValueLabel = new JLabel(jobDetails[4]);
         detailsPanel.add(experienceValueLabel);
-
-        JLabel resumeLinkLabel = new JLabel("Resume Link:");
-        detailsPanel.add(resumeLinkLabel);
-        resumeLinkField = new JTextField();
-        detailsPanel.add(resumeLinkField);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton applyButton = new JButton("Apply");
@@ -146,59 +138,92 @@ public class JobDetails_2 extends JFrame {
     }
 
     private void submitResume() {
-        String resumeLink = resumeLinkField.getText();
-        if (!resumeLink.isEmpty()) {
-            Connection conn = null;
-            PreparedStatement fetchPstmt = null;
-            PreparedStatement insertPstmt = null;
-            ResultSet rs = null;
+        Connection conn = null;
+        PreparedStatement fetchPstmt = null;
+        PreparedStatement insertPstmt = null;
+        ResultSet rs = null;
+        try {
+            conn = DBConnection.getConnection();
+
+            // Fetch the employer_id associated with the job_id
+            String fetchEmployerSql = "SELECT employer_id FROM jobs WHERE job_id = ?";
+            fetchPstmt = conn.prepareStatement(fetchEmployerSql);
+            fetchPstmt.setInt(1, jobId);
+            rs = fetchPstmt.executeQuery();
+            int employerId = -1;
+            if (rs.next()) {
+                employerId = rs.getInt("employer_id");
+            }
+            rs.close();
+            fetchPstmt.close();
+
+            // Check if employer_id was successfully fetched
+            if (employerId == -1) {
+                JOptionPane.showMessageDialog(contentPane, "Failed to retrieve employer information. Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Fetch the resume link from the profile table
+            String resumeLink = getResumeLink(employeeId);
+            if (resumeLink == null || resumeLink.isEmpty()) {
+                JOptionPane.showMessageDialog(contentPane, "No resume found in profile. Please update your profile.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Insert a new resume entry
+            String insertSql = "INSERT INTO resumes (employee_id, employee_name, job_id, resume_link, employer_id) VALUES (?, ?, ?, ?, ?)";
+            insertPstmt = conn.prepareStatement(insertSql);
+            insertPstmt.setInt(1, employeeId);
+            insertPstmt.setString(2, employeeName);
+            insertPstmt.setInt(3, jobId);
+            insertPstmt.setString(4, resumeLink);
+            insertPstmt.setInt(5, employerId);
+            insertPstmt.executeUpdate();
+            JOptionPane.showMessageDialog(contentPane, "Resume submitted successfully.");
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(contentPane, "Failed to submit resume. Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
+        } finally {
             try {
-                conn = DBConnection.getConnection();
-
-                // Fetch the employer_id associated with the job_id
-                String fetchEmployerSql = "SELECT employer_id FROM jobs WHERE job_id = ?";
-                fetchPstmt = conn.prepareStatement(fetchEmployerSql);
-                fetchPstmt.setInt(1, jobId);
-                rs = fetchPstmt.executeQuery();
-                int employerId = -1;
-                if (rs.next()) {
-                    employerId = rs.getInt("employer_id");
-                }
-                rs.close();
-                fetchPstmt.close();
-
-                // Check if employer_id was successfully fetched
-                if (employerId == -1) {
-                    JOptionPane.showMessageDialog(contentPane, "Failed to retrieve employer information. Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-
-                // Insert a new resume entry
-                String insertSql = "INSERT INTO resumes (employee_id, employee_name, job_id, resume_link, employer_id) VALUES (?, ?, ?, ?, ?)";
-                insertPstmt = conn.prepareStatement(insertSql);
-                insertPstmt.setInt(1, employeeId);
-                insertPstmt.setString(2, employeeName);
-                insertPstmt.setInt(3, jobId);
-                insertPstmt.setString(4, resumeLink);
-                insertPstmt.setInt(5, employerId);
-                insertPstmt.executeUpdate();
-                JOptionPane.showMessageDialog(contentPane, "Resume submitted successfully.");
+                if (rs != null) rs.close();
+                if (fetchPstmt != null) fetchPstmt.close();
+                if (insertPstmt != null) insertPstmt.close();
+                if (conn != null) conn.close();
             } catch (SQLException ex) {
                 ex.printStackTrace();
-                JOptionPane.showMessageDialog(contentPane, "Failed to submit resume. Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
-            } finally {
-                try {
-                    if (rs != null) rs.close();
-                    if (fetchPstmt != null) fetchPstmt.close();
-                    if (insertPstmt != null) insertPstmt.close();
-                    if (conn != null) conn.close();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
             }
-        } else {
-            JOptionPane.showMessageDialog(contentPane, "Resume link cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    // Method to get resume link from profile
+    private String getResumeLink(int employeeId) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        String resumeLink = "";
+
+        try {
+            conn = DBConnection.getConnection();
+            String sql = "SELECT resume_link FROM profile WHERE user_id = ?";
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1, employeeId);
+            rs = pstmt.executeQuery();
+            if (rs.next()) {
+                resumeLink = rs.getString("resume_link");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (pstmt != null) pstmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return resumeLink;
     }
 
     private void navigateToEmployeePage() {

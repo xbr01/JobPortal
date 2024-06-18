@@ -40,15 +40,33 @@ public class EmployeePage extends JFrame {
 
         fetchAndDisplayJobs();
 
-        JPanel logoutPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+
+        JButton showAppliedJobsButton = new JButton("Show Applied Jobs");
+        showAppliedJobsButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                showAppliedJobsPage();
+            }
+        });
+        bottomPanel.add(showAppliedJobsButton);
+
+        JButton showProfileButton = new JButton("Show Profile");
+        showProfileButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                showProfilePage();
+            }
+        });
+        bottomPanel.add(showProfileButton);
+
         JButton logoutButton = new JButton("Logout");
         logoutButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 navigateToLoginPage();
             }
         });
-        logoutPanel.add(logoutButton);
-        contentPane.add(logoutPanel, BorderLayout.SOUTH);
+        bottomPanel.add(logoutButton);
+
+        contentPane.add(bottomPanel, BorderLayout.SOUTH);
     }
 
     private String getEmployeeName(int userId) {
@@ -130,4 +148,17 @@ public class EmployeePage extends JFrame {
         loginPage.setVisible(true);
         this.dispose();
     }
+
+    private void showAppliedJobsPage() {
+        AppliedJobsPage appliedJobsPage = new AppliedJobsPage(this);
+        appliedJobsPage.setVisible(true);
+        this.setVisible(false);
+    }
+
+    private void showProfilePage() {
+        EmployeeProfilePage profilePage = new EmployeeProfilePage(this, userId);
+        profilePage.setVisible(true);
+        this.setVisible(false);
+    }
 }
+    

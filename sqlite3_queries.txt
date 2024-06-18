@@ -49,3 +49,15 @@ CREATE TABLE IF NOT EXISTS accepted_resumes (
     FOREIGN KEY (job_id) REFERENCES jobs(job_id)
 );
 
+CREATE TABLE profile (
+    user_id INT PRIMARY KEY,
+    name VARCHAR(100),
+    email VARCHAR(100),
+    skills TEXT,
+    work_experience TEXT,
+    education TEXT,
+    resume_link VARCHAR(255),
+    FOREIGN KEY (user_id) REFERENCES registration(id)
+);
+
+

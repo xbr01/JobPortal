@@ -40,3 +40,12 @@ CREATE TABLE IF NOT EXISTS registration (
     role INTEGER NOT NULL CHECK (role IN (0, 1))
 );
 
+
+CREATE TABLE IF NOT EXISTS accepted_resumes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    job_id INT NOT NULL,
+    employee_name VARCHAR(255) NOT NULL,
+    resume_link TEXT NOT NULL,
+    FOREIGN KEY (job_id) REFERENCES jobs(job_id)
+);
+

@@ -16,7 +16,7 @@ public class DBConnection {
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
             throw new IllegalStateException("Sqlite JDBC Driver not found");
-        }
+        }   
     }
 
     public static Connection getConnection() throws SQLException {

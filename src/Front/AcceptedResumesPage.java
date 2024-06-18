@@ -9,16 +9,16 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+// import java.util.logging.Level;
+// import java.util.logging.Logger;
 
 public class AcceptedResumesPage extends JFrame {
     private JPanel contentPane;
     private JPanel resumesPanel;
-    private int jobId; // Variable to store the jobId
+    //private int jobId; // Variable to store the jobId
 
     public AcceptedResumesPage(int jobId) {
-        this.jobId = jobId; // Store the jobId
+        //this.jobId = jobId; // Store the jobId
         setTitle("Accepted Resumes for Job ID: " + jobId);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setBounds(100, 100, 800, 600);

@@ -177,22 +177,37 @@ public class JobRequestsPage extends JFrame {
         Connection conn = null;
         try {
             conn = DBConnection.getConnection();
-            String sql = "INSERT INTO accepted_resumes (job_id, employee_name, resume_link) VALUES (?, ?, ?)";
-            PreparedStatement pstmt = conn.prepareStatement(sql);
-            pstmt.setInt(1, jobId);
-            pstmt.setString(2, employeeName);
-            pstmt.setString(3, resumeLink);
-            pstmt.executeUpdate();
-            
-            // Delete the accepted resume from the resumes table
+            conn.setAutoCommit(false); // Start transaction
+    
+            // Insert into accepted_resumes
+            String insertSql = "INSERT INTO accepted_resumes (job_id, employee_name, resume_link) VALUES (?, ?, ?)";
+            try (PreparedStatement insertPstmt = conn.prepareStatement(insertSql)) {
+                insertPstmt.setInt(1, jobId);
+                insertPstmt.setString(2, employeeName);
+                insertPstmt.setString(3, resumeLink);
+                LOGGER.info("Inserting into accepted_resumes: job_id=" + jobId + ", employee_name=" + employeeName + ", resume_link=" + resumeLink);
+                insertPstmt.executeUpdate();
+            }
+    
+            // Delete from resumes
             String deleteSql = "DELETE FROM resumes WHERE job_id = ? AND employee_id = ?";
-            PreparedStatement deletePstmt = conn.prepareStatement(deleteSql);
-            deletePstmt.setInt(1, jobId);
-            deletePstmt.setInt(2, employeeId);
-            deletePstmt.executeUpdate();
-            
+            try (PreparedStatement deletePstmt = conn.prepareStatement(deleteSql)) {
+                deletePstmt.setInt(1, jobId);
+                deletePstmt.setInt(2, employeeId);
+                LOGGER.info("Deleting from resumes: job_id=" + jobId + ", employee_id=" + employeeId);
+                deletePstmt.executeUpdate();
+            }
+    
+            conn.commit(); // Commit transaction
             JOptionPane.showMessageDialog(contentPane, "Resume accepted and removed from requests successfully.");
         } catch (SQLException ex) {
+            if (conn != null) {
+                try {
+                    conn.rollback(); // Rollback transaction on error
+                } catch (SQLException rollbackEx) {
+                    LOGGER.log(Level.SEVERE, "Error rolling back transaction", rollbackEx);
+                }
+            }
             LOGGER.log(Level.SEVERE, "Error accepting resume", ex);
             JOptionPane.showMessageDialog(contentPane, "Error accepting resume. Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
         } finally {
@@ -205,4 +220,4 @@ public class JobRequestsPage extends JFrame {
             }
         }
     }
-}
+    }

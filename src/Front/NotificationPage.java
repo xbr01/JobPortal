@@ -12,7 +12,6 @@ import java.sql.SQLException;
 
 public class NotificationPage extends JFrame {
 
-    private static final long serialVersionUID = 1L;
     private JPanel contentPane;
     private JPanel notificationsPanel;
     private String employeeName;
@@ -29,109 +28,85 @@ public class NotificationPage extends JFrame {
 
         notificationsPanel = new JPanel();
         notificationsPanel.setLayout(new BoxLayout(notificationsPanel, BoxLayout.Y_AXIS));
-        notificationsPanel.setBorder(BorderFactory.createTitledBorder("Notifications"));
+        notificationsPanel.setBorder(BorderFactory.createTitledBorder("Accepted Resumes"));
         notificationsPanel.setBackground(new Color(245, 245, 245));
         contentPane.add(new JScrollPane(notificationsPanel), BorderLayout.CENTER);
 
-        fetchAndDisplayNotifications();
+        fetchAndDisplayAcceptedResumes(employeeName);
 
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton backButton = new JButton("Back");
+        // Add Back button
+        JButton backButton = new JButton("Back to Employee Page");
         backButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                dispose();
+                navigateToEmployeePage();
             }
         });
-        buttonPanel.add(backButton);
-        contentPane.add(buttonPanel, BorderLayout.SOUTH);
+        contentPane.add(backButton, BorderLayout.NORTH);
     }
 
-    private void fetchAndDisplayNotifications() {
+    private void fetchAndDisplayAcceptedResumes(String employeeName) {
         Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+
         try {
             conn = DBConnection.getConnection();
-            String sql = "SELECT jobs.job_title FROM accepted_resumes JOIN jobs ON accepted_resumes.job_id = jobs.job_id WHERE accepted_resumes.employee_name = ?";
-                    
-                                
-            PreparedStatement pstmt = conn.prepareStatement(sql);
+            System.out.println(employeeName);
+            String sql = "SELECT job_id, employee_name, resume_link FROM accepted_resumes WHERE employee_name = ?";
+            pstmt = conn.prepareStatement(sql);
             pstmt.setString(1, employeeName);
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                int jobId = rs.getInt("job_id");
-                String jobTitle = rs.getString("job_title");
-                addNotificationToPanel(jobId, jobTitle, notificationsPanel);
-            }
+            rs = pstmt.executeQuery();
+            if (!rs.next()) {
+                System.out.println("No results found for employee: " + employeeName);
+            } else {
+                do {
+                    int jobId = rs.getInt("job_id");
+                    String employeeName1 = rs.getString("employee_name");
+                    String resumeLink = rs.getString("resume_link");
+                    System.out.println("Fetched Employee Name: " + employeeName1);
+                    System.out.println("Fetched Resume Link: " + resumeLink);
+                    addNotificationToPanel(jobId, employeeName1, resumeLink);
+                } while (rs.next());
+                }
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            if (conn != null) {
-                try {
-                    conn.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
+            try {
+                if (rs != null) rs.close();
+                if (pstmt != null) pstmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
             }
         }
     }
 
-    private void addNotificationToPanel(int jobId, String jobTitle, JPanel panel) {
+    private void addNotificationToPanel(int jobId, String employeeName, String resumeLink) {
         JPanel notificationPanel = new JPanel();
         notificationPanel.setLayout(new BorderLayout(5, 5));
         notificationPanel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        JLabel statusLabel = new JLabel("Job Title: " + jobTitle);
-        notificationPanel.add(statusLabel, BorderLayout.CENTER);
 
-        JButton acceptButton = new JButton("Accept");
-        JButton declineButton = new JButton("Decline");
+        JPanel infoPanel = new JPanel();
+        infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
 
-        acceptButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                respondToNotification(jobId, "accepted");
-                panel.remove(notificationPanel);
-                panel.revalidate();
-                panel.repaint();
-            }
-        });
+        JLabel jobIdLabel = new JLabel("Job ID: " + jobId);
+        JLabel employeeNameLabel = new JLabel("Employee Name: " + employeeName);
+        JLabel resumeLinkLabel = new JLabel("Resume Link: " + resumeLink);
 
-        declineButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                respondToNotification(jobId, "declined");
-                panel.remove(notificationPanel);
-                panel.revalidate();
-                panel.repaint();
-            }
-        });
+        infoPanel.add(jobIdLabel);
+        infoPanel.add(employeeNameLabel);
+        infoPanel.add(resumeLinkLabel);
 
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        buttonPanel.add(acceptButton);
-        buttonPanel.add(declineButton);
-        notificationPanel.add(buttonPanel, BorderLayout.EAST);
-
-        panel.add(notificationPanel);
-        panel.revalidate();
-        panel.repaint();
+        notificationPanel.add(infoPanel, BorderLayout.CENTER);
+        notificationsPanel.add(notificationPanel);
+        notificationsPanel.revalidate();
+        notificationsPanel.repaint();
     }
 
-    private void respondToNotification(int jobId, String response) {
-        Connection conn = null;
-        try {
-            conn = DBConnection.getConnection();
-            String sql = "INSERT INTO final_responses (job_id, employee_name, response) VALUES (?, ?, ?)";
-            PreparedStatement pstmt = conn.prepareStatement(sql);
-            pstmt.setInt(1, jobId);
-            pstmt.setString(2, employeeName);
-            pstmt.setString(3, response);
-            pstmt.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            if (conn != null) {
-                try {
-                    conn.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
+    private void navigateToEmployeePage() {
+        // Assuming you have a reference to the EmployeePage instance
+        EmployeePage employeePage = new EmployeePage(null, 0); // Replace with actual parameters if needed
+        employeePage.setVisible(true);
+        this.dispose();
     }
 }

@@ -120,7 +120,6 @@ public class EmployeePage extends JFrame {
             while (rs.next()) {
                 int jobId = rs.getInt("job_id");
                 String jobTitle = rs.getString("job_title");
-                System.out.println("Fetched jobId: " + jobId + " with title: " + jobTitle); // Debug statement
                 JButton jobButton = new JButton(jobTitle);
                 jobButton.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
@@ -146,7 +145,6 @@ public class EmployeePage extends JFrame {
     }
 
     private void navigateToJobDetails(int jobId, String jobTitle) {
-        System.out.println("Navigating to JobDetails_2 with jobId: " + jobId + " and jobTitle: " + jobTitle); // Debug statement
         JobDetails_2 jobDetails = new JobDetails_2(this, jobId, jobTitle, userId, employeeName);
         jobDetails.setVisible(true);
         this.setVisible(false);
@@ -175,7 +173,6 @@ public class EmployeePage extends JFrame {
     }
 
     public static void main(String[] args) {
-        // Sample usage
         Main loginPage = new Main(); // Replace with your actual login page instance
         EmployeePage employeePage = new EmployeePage(loginPage, 1); // Replace 1 with actual user ID
         employeePage.setVisible(true);

@@ -65,16 +65,22 @@ public class JobRequestsPage extends JFrame {
         Connection conn = null;
         try {
             conn = DBConnection.getConnection();
-            String sql = "SELECT employee_name, resume_link " +
-                         "FROM resumes " +
-                         "WHERE job_id = ?";
+            String sql = "SELECT p.name, p.email, p.skills, p.work_experience, p.education, r.resume_link, r.employee_id " +
+                         "FROM resumes r " +
+                         "JOIN profile p ON r.employee_id = p.user_id " +
+                         "WHERE r.job_id = ?";
             PreparedStatement pstmt = conn.prepareStatement(sql);
             pstmt.setInt(1, jobId);
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
-                String employeeName = rs.getString("employee_name");
+                String employeeName = rs.getString("name");
+                String email = rs.getString("email");
+                String skills = rs.getString("skills");
+                String workExperience = rs.getString("work_experience");
+                String education = rs.getString("education");
                 String resumeLink = rs.getString("resume_link");
-                addRequestToPanel(employeeName, resumeLink, requestsPanel, jobId);
+                int employeeId = rs.getInt("employee_id");
+                addRequestToPanel(employeeName, email, skills, workExperience, education, resumeLink, employeeId, requestsPanel, jobId);
             }
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Error fetching job requests for job ID: " + jobId, e);
@@ -89,19 +95,34 @@ public class JobRequestsPage extends JFrame {
         }
     }
 
-    private void addRequestToPanel(String employeeName, String resumeLink, JPanel panel, int jobId) {
+    private void addRequestToPanel(String employeeName, String email, String skills, String workExperience, String education, String resumeLink, int employeeId, JPanel panel, int jobId) {
         JPanel requestPanel = new JPanel();
         requestPanel.setLayout(new BorderLayout(5, 5));
         requestPanel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        JLabel nameLabel = new JLabel("Applicant: " + employeeName);
+        
+        JPanel infoPanel = new JPanel();
+        infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
+        
+        JLabel nameLabel = new JLabel("Name: " + employeeName);
+        JLabel emailLabel = new JLabel("Email: " + email);
+        JLabel skillsLabel = new JLabel("Skills: " + skills);
+        JLabel workExperienceLabel = new JLabel("Work Experience: " + workExperience);
+        JLabel educationLabel = new JLabel("Education: " + education);
         JLabel resumeLabel = new JLabel("Resume Link: " + resumeLink);
-        requestPanel.add(nameLabel, BorderLayout.NORTH);
-        requestPanel.add(resumeLabel, BorderLayout.CENTER);
+        
+        infoPanel.add(nameLabel);
+        infoPanel.add(emailLabel);
+        infoPanel.add(skillsLabel);
+        infoPanel.add(workExperienceLabel);
+        infoPanel.add(educationLabel);
+        infoPanel.add(resumeLabel);
+        
+        requestPanel.add(infoPanel, BorderLayout.CENTER);
 
         JButton rejectButton = new JButton("Reject");
         rejectButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                rejectResume(jobId, employeeName, resumeLink);
+                rejectResume(jobId, employeeId);
                 panel.remove(requestPanel); // Remove the request from the panel
                 panel.revalidate();
                 panel.repaint();
@@ -111,7 +132,7 @@ public class JobRequestsPage extends JFrame {
         JButton acceptButton = new JButton("Accept");
         acceptButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                acceptResume(jobId, employeeName, resumeLink);
+                acceptResume(jobId, employeeId, employeeName, resumeLink);
                 panel.remove(requestPanel); // Remove the request from the panel
                 panel.revalidate();
                 panel.repaint();
@@ -128,15 +149,14 @@ public class JobRequestsPage extends JFrame {
         panel.repaint();
     }
 
-    private void rejectResume(int jobId, String employeeName, String resumeLink) {
+    private void rejectResume(int jobId, int employeeId) {
         Connection conn = null;
         try {
             conn = DBConnection.getConnection();
-            String sql = "DELETE FROM resumes WHERE job_id = ? AND employee_name = ? AND resume_link = ?";
+            String sql = "DELETE FROM resumes WHERE job_id = ? AND employee_id = ?";
             PreparedStatement pstmt = conn.prepareStatement(sql);
             pstmt.setInt(1, jobId);
-            pstmt.setString(2, employeeName);
-            pstmt.setString(3, resumeLink);
+            pstmt.setInt(2, employeeId);
             pstmt.executeUpdate();
             JOptionPane.showMessageDialog(contentPane, "Resume rejected successfully.");
         } catch (SQLException ex) {
@@ -153,7 +173,7 @@ public class JobRequestsPage extends JFrame {
         }
     }
 
-    private void acceptResume(int jobId, String employeeName, String resumeLink) {
+    private void acceptResume(int jobId, int employeeId, String employeeName, String resumeLink) {
         Connection conn = null;
         try {
             conn = DBConnection.getConnection();
@@ -163,8 +183,15 @@ public class JobRequestsPage extends JFrame {
             pstmt.setString(2, employeeName);
             pstmt.setString(3, resumeLink);
             pstmt.executeUpdate();
-            JOptionPane.showMessageDialog(contentPane, "Resume accepted successfully.");
-            // You can navigate to a new page to display accepted resumes here
+            
+            // Delete the accepted resume from the resumes table
+            String deleteSql = "DELETE FROM resumes WHERE job_id = ? AND employee_id = ?";
+            PreparedStatement deletePstmt = conn.prepareStatement(deleteSql);
+            deletePstmt.setInt(1, jobId);
+            deletePstmt.setInt(2, employeeId);
+            deletePstmt.executeUpdate();
+            
+            JOptionPane.showMessageDialog(contentPane, "Resume accepted and removed from requests successfully.");
         } catch (SQLException ex) {
             LOGGER.log(Level.SEVERE, "Error accepting resume", ex);
             JOptionPane.showMessageDialog(contentPane, "Error accepting resume. Please try again.", "Error", JOptionPane.ERROR_MESSAGE);

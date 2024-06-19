@@ -42,6 +42,14 @@ public class EmployeePage extends JFrame {
 
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 
+        JButton showNotificationsButton = new JButton("Show Notifications");
+        showNotificationsButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                showNotificationsPage();
+            }
+        });
+        bottomPanel.add(showNotificationsButton);
+
         JButton showAppliedJobsButton = new JButton("Show Applied Jobs");
         showAppliedJobsButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -160,5 +168,16 @@ public class EmployeePage extends JFrame {
         profilePage.setVisible(true);
         this.setVisible(false);
     }
+
+    private void showNotificationsPage() {
+        NotificationPage notificationPage = new NotificationPage(employeeName);
+        notificationPage.setVisible(true);
+    }
+
+    public static void main(String[] args) {
+        // Sample usage
+        Main loginPage = new Main(); // Replace with your actual login page instance
+        EmployeePage employeePage = new EmployeePage(loginPage, 1); // Replace 1 with actual user ID
+        employeePage.setVisible(true);
+    }
 }
-    

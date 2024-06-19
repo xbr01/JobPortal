@@ -61,3 +61,11 @@ CREATE TABLE profile (
 );
 
 
+CREATE TABLE IF NOT EXISTS final_responses (
+    id SERIAL PRIMARY KEY,
+    job_id INT NOT NULL,
+    employee_id INT NOT NULL,
+    response VARCHAR(50) NOT NULL,
+    FOREIGN KEY (job_id) REFERENCES jobs(job_id),
+    FOREIGN KEY (employee_id) REFERENCES registration(id)
+);

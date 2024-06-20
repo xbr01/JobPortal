@@ -156,7 +156,7 @@ public class EmployeePage extends JFrame {
     }
 
     private void showAppliedJobsPage() {
-        AppliedJobsPage appliedJobsPage = new AppliedJobsPage(this);
+        AppliedJobsPage appliedJobsPage = new AppliedJobsPage(this,userId);
         appliedJobsPage.setVisible(true);
         this.setVisible(false);
     }

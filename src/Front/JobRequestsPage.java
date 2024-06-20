@@ -190,13 +190,13 @@ public class JobRequestsPage extends JFrame {
             }
     
             // Delete from resumes
-            String deleteSql = "DELETE FROM resumes WHERE job_id = ? AND employee_id = ?";
-            try (PreparedStatement deletePstmt = conn.prepareStatement(deleteSql)) {
-                deletePstmt.setInt(1, jobId);
-                deletePstmt.setInt(2, employeeId);
-                LOGGER.info("Deleting from resumes: job_id=" + jobId + ", employee_id=" + employeeId);
-                deletePstmt.executeUpdate();
-            }
+            // String deleteSql = "DELETE FROM resumes WHERE job_id = ? AND employee_id = ?";
+            // try (PreparedStatement deletePstmt = conn.prepareStatement(deleteSql)) {
+            //     deletePstmt.setInt(1, jobId);
+            //     deletePstmt.setInt(2, employeeId);
+            //     LOGGER.info("Deleting from resumes: job_id=" + jobId + ", employee_id=" + employeeId);
+            //     deletePstmt.executeUpdate();
+            // }
     
             conn.commit(); // Commit transaction
             JOptionPane.showMessageDialog(contentPane, "Resume accepted and removed from requests successfully.");

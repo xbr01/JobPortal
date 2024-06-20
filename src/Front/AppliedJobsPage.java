@@ -57,15 +57,21 @@ public class AppliedJobsPage extends JFrame {
 
         try {
             conn = DBConnection.getConnection();
-            String sql = "SELECT j.job_title, r.resume_link FROM resumes r JOIN jobs j ON r.job_id = j.job_id WHERE r.employee_id = ?";
+            String sql = "SELECT r.job_id, j.job_title, r.resume_link, " +
+                         "(SELECT COUNT(*) FROM accepted_resumes ar WHERE ar.job_id = r.job_id AND ar.employee_name = r.employee_name) AS is_accepted " +
+                         "FROM resumes r " +
+                         "JOIN jobs j ON r.job_id = j.job_id " +
+                         "WHERE r.employee_id = ?";
             pstmt = conn.prepareStatement(sql);
             pstmt.setInt(1, employeeId);
             rs = pstmt.executeQuery();
 
             while (rs.next()) {
+                int jobId = rs.getInt("job_id");
                 String jobTitle = rs.getString("job_title");
                 String resumeLink = rs.getString("resume_link");
-                addAppliedJob(jobTitle, resumeLink);
+                boolean isAccepted = rs.getInt("is_accepted") > 0;
+                addAppliedJob(jobId, jobTitle, resumeLink, isAccepted);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -80,7 +86,7 @@ public class AppliedJobsPage extends JFrame {
         }
     }
 
-    public void addAppliedJob(String jobTitle, String resumeLink) {
+    public void addAppliedJob(int jobId, String jobTitle, String resumeLink, boolean isAccepted) {
         JPanel jobPanel = new JPanel();
         jobPanel.setLayout(new BorderLayout(5, 5));
         jobPanel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
@@ -93,11 +99,18 @@ public class AppliedJobsPage extends JFrame {
         labelsPanel.add(jobLabel, BorderLayout.CENTER);
         labelsPanel.add(resumeLinkLabel, BorderLayout.SOUTH);
 
+        if (isAccepted) {
+            JLabel selectedLabel = new JLabel("Status: Selected");
+            selectedLabel.setForeground(Color.GREEN);
+            labelsPanel.add(selectedLabel, BorderLayout.NORTH);
+        }
+
         JButton deleteButton = new JButton("Delete");
         deleteButton.setBackground(new Color(255, 59, 48));
         deleteButton.setForeground(Color.WHITE);
         deleteButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+                removeJobFromDatabase(jobId, employeeId);
                 appliedJobsPanel.remove(jobPanel);
                 appliedJobsPanel.revalidate();
                 appliedJobsPanel.repaint();
@@ -109,6 +122,29 @@ public class AppliedJobsPage extends JFrame {
         appliedJobsPanel.add(jobPanel);
         appliedJobsPanel.revalidate();
         appliedJobsPanel.repaint();
+    }
+
+    private void removeJobFromDatabase(int jobId, int employeeId) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+
+        try {
+            conn = DBConnection.getConnection();
+            String sql = "DELETE FROM resumes WHERE job_id = ? AND employee_id = ?";
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1, jobId);
+            pstmt.setInt(2, employeeId);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (pstmt != null) pstmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private void navigateToEmployeePage() {

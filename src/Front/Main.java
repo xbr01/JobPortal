@@ -40,43 +40,57 @@ public class Main extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setBounds(100, 100, 400, 300);
         contentPane = new JPanel();
-        contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
-        setContentPane(contentPane);
+        contentPane.setBorder(new EmptyBorder(15, 15, 15, 15));
         contentPane.setLayout(new BoxLayout(contentPane, BoxLayout.Y_AXIS));
+        contentPane.setBackground(new Color(240, 248, 255));
+        setContentPane(contentPane);
 
+        // Create and style radio buttons
         employeeRadio = new JRadioButton("Employee");
         employerRadio = new JRadioButton("Employer");
+        styleRadioButton(employeeRadio);
+        styleRadioButton(employerRadio);
         radioGroup = new ButtonGroup();
         radioGroup.add(employeeRadio);
         radioGroup.add(employerRadio);
 
         JPanel radioPanel = new JPanel();
         radioPanel.setLayout(new FlowLayout());
+        radioPanel.setBackground(new Color(240, 248, 255));
         radioPanel.add(employeeRadio);
         radioPanel.add(employerRadio);
 
+        // Create and style username panel
         JPanel usernamePanel = new JPanel();
         usernamePanel.setLayout(new FlowLayout());
-        usernamePanel.add(new JLabel("Username:"));
+        usernamePanel.setBackground(new Color(240, 248, 255));
+        JLabel usernameLabel = new JLabel("Username:");
+        usernameLabel.setFont(new Font("Arial", Font.PLAIN, 16));
         usernameField = new JTextField(20);
+        styleTextField(usernameField);
+        usernamePanel.add(usernameLabel);
         usernamePanel.add(usernameField);
 
+        // Create and style password panel
         JPanel passwordPanel = new JPanel();
         passwordPanel.setLayout(new FlowLayout());
-        passwordPanel.add(new JLabel("Password:"));
+        passwordPanel.setBackground(new Color(240, 248, 255));
+        JLabel passwordLabel = new JLabel("Password:");
+        passwordLabel.setFont(new Font("Arial", Font.PLAIN, 16));
         passwordField = new JPasswordField(20);
+        styleTextField(passwordField);
+        passwordPanel.add(passwordLabel);
         passwordPanel.add(passwordField);
 
+        // Create and style buttons
         loginButton = new JButton("Login");
-        loginButton.setBackground(new Color(0, 122, 255));
-        loginButton.setForeground(Color.WHITE);
-
+        styleButton(loginButton, new Color(0, 122, 255));
         registerButton = new JButton("Register");
-        registerButton.setBackground(new Color(0, 122, 255));
-        registerButton.setForeground(Color.WHITE);
+        styleButton(registerButton, new Color(0, 122, 255));
 
         JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(new FlowLayout());
+        buttonPanel.setBackground(new Color(240, 248, 255));
         buttonPanel.add(loginButton);
         buttonPanel.add(registerButton);
 
@@ -85,6 +99,7 @@ public class Main extends JFrame {
         contentPane.add(passwordPanel);
         contentPane.add(buttonPanel);
 
+        // Add action listeners for buttons
         loginButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 if (employeeRadio.isSelected()) {
@@ -107,9 +122,32 @@ public class Main extends JFrame {
         });
     }
 
+    private void styleTextField(JTextField textField) {
+        textField.setFont(new Font("Arial", Font.PLAIN, 16));
+        textField.setBorder(BorderFactory.createLineBorder(new Color(173, 216, 230), 2));
+        textField.setBackground(new Color(255, 255, 255));
+    }
+
+    private void styleRadioButton(JRadioButton radioButton) {
+        radioButton.setFont(new Font("Arial", Font.PLAIN, 16));
+        radioButton.setBackground(new Color(240, 248, 255));
+    }
+
+    private void styleButton(JButton button, Color color) {
+        button.setFont(new Font("Arial", Font.BOLD, 16));
+        button.setBackground(color);
+        button.setForeground(Color.WHITE);
+        button.setFocusPainted(false);
+        button.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
+    }
+
     private void loginUser(int role) {
-        String username = usernameField.getText();
-        String password = new String(passwordField.getPassword());
+        String username = usernameField.getText().trim();
+        String password = new String(passwordField.getPassword()).trim();
+
+        if (!validateInput(username, password)) {
+            return;
+        }
 
         try {
             Connection connection = DBConnection.getConnection();
@@ -145,5 +183,24 @@ public class Main extends JFrame {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(contentPane, "Database error. Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    private boolean validateInput(String username, String password) {
+        if (username.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Username is required.", "Error", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+
+        if (password.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Password is required.", "Error", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+
+        if (password.length() < 8) {
+            JOptionPane.showMessageDialog(this, "Password must be at least 8 characters long.", "Error", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+
+        return true;
     }
 }

@@ -9,6 +9,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.regex.Pattern;
 
 public class EmployeeProfilePage extends JFrame {
 
@@ -64,7 +65,9 @@ public class EmployeeProfilePage extends JFrame {
         saveButton.setVisible(false);
         saveButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                saveProfile();
+                if (validateInput()) {
+                    saveProfile();
+                }
             }
         });
         profilePanel.add(saveButton);
@@ -137,6 +140,64 @@ public class EmployeeProfilePage extends JFrame {
         workExperienceField.setEditable(editable);
         educationField.setEditable(editable);
         resumeLinkField.setEditable(editable);
+    }
+
+    private boolean validateInput() {
+        if (nameField.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Name is required.", "Error", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+
+        String email = emailField.getText().trim();
+        if (email.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Email is required.", "Error", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+
+        if (!isValidEmail(email)) {
+            JOptionPane.showMessageDialog(this, "Invalid email format.", "Error", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+
+        if (skillsField.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Skills are required.", "Error", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+
+        if (workExperienceField.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Work experience is required.", "Error", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+
+        if (educationField.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Educational qualification is required.", "Error", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+
+        String resumeLink = resumeLinkField.getText().trim();
+        if (resumeLink.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Resume link is required.", "Error", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+
+        if (!isValidUrl(resumeLink)) {
+            JOptionPane.showMessageDialog(this, "Invalid resume link format.", "Error", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean isValidEmail(String email) {
+        String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
+        Pattern pat = Pattern.compile(emailRegex);
+        return pat.matcher(email).matches();
+    }
+
+    private boolean isValidUrl(String url) {
+        String urlRegex = "^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$";
+        Pattern pat = Pattern.compile(urlRegex);
+        return pat.matcher(url).matches();
     }
 
     private void saveProfile() {

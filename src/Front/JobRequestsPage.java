@@ -199,7 +199,7 @@ public class JobRequestsPage extends JFrame {
             // }
     
             conn.commit(); // Commit transaction
-            JOptionPane.showMessageDialog(contentPane, "Resume accepted and removed from requests successfully.");
+            JOptionPane.showMessageDialog(contentPane, "Resume accepted successfully.");
         } catch (SQLException ex) {
             if (conn != null) {
                 try {

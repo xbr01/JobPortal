@@ -55,10 +55,10 @@ public class AppliedJobsPage extends JFrame {
         PreparedStatement pstmt = null;
         ResultSet rs = null;
 
+        //check the logic here fromy the tables cross check if
         try {
             conn = DBConnection.getConnection();
-            String sql = "SELECT r.job_id, j.job_title, r.resume_link, " +
-                         "(SELECT COUNT(*) FROM accepted_resumes ar WHERE ar.job_id = r.job_id AND ar.employee_name = r.employee_name) AS is_accepted " +
+            String sql = "SELECT r.job_id, j.job_title, r.employee_name, r.resume_link " +
                          "FROM resumes r " +
                          "JOIN jobs j ON r.job_id = j.job_id " +
                          "WHERE r.employee_id = ?";
@@ -69,8 +69,9 @@ public class AppliedJobsPage extends JFrame {
             while (rs.next()) {
                 int jobId = rs.getInt("job_id");
                 String jobTitle = rs.getString("job_title");
+                String employeeName = rs.getString("employee_name");
                 String resumeLink = rs.getString("resume_link");
-                boolean isAccepted = rs.getInt("is_accepted") > 0;
+                boolean isAccepted = checkIfAccepted(jobId, employeeName);
                 addAppliedJob(jobId, jobTitle, resumeLink, isAccepted);
             }
         } catch (SQLException e) {
@@ -84,6 +85,37 @@ public class AppliedJobsPage extends JFrame {
                 e.printStackTrace();
             }
         }
+    }
+
+    private boolean checkIfAccepted(int jobId, String employeeName) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        boolean isAccepted = false;
+
+        try {
+            conn = DBConnection.getConnection();
+            String sql = "SELECT COUNT(*) AS count FROM accepted_resumes WHERE job_id = ? AND employee_name = ?";
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1, jobId);
+            pstmt.setString(2, employeeName);
+            rs = pstmt.executeQuery();
+
+            if (rs.next() && rs.getInt("count") > 0) {
+                isAccepted = true;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (pstmt != null) pstmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return isAccepted;
     }
 
     public void addAppliedJob(int jobId, String jobTitle, String resumeLink, boolean isAccepted) {
@@ -100,9 +132,14 @@ public class AppliedJobsPage extends JFrame {
         labelsPanel.add(resumeLinkLabel, BorderLayout.SOUTH);
 
         if (isAccepted) {
-            JLabel selectedLabel = new JLabel("Status: Selected");
-            selectedLabel.setForeground(Color.GREEN);
-            labelsPanel.add(selectedLabel, BorderLayout.NORTH);
+            //JLabel selectedLabel = new JLabel("Status: Selected");
+            //selectedLabel.setForeground(Color.GREEN);
+            //labelsPanel.add(selectedLabel, BorderLayout.NORTH);
+        } else {
+            // JLabel selectedLabel = new JLabel("Status: not Selected");
+            // selectedLabel.setForeground(Color.GREEN);
+            // labelsPanel.add(selectedLabel, BorderLayout.NORTH);
+
         }
 
         JButton deleteButton = new JButton("Delete");

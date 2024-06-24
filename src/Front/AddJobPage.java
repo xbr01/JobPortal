@@ -102,16 +102,26 @@ public class AddJobPage extends JFrame {
     }
 
     private void addJob() {
-        String jobTitle = jobTitleField.getText();
-        String jobDescription = jobDescriptionArea.getText();
-        String jobRequirements = jobRequirementsArea.getText();
-        String educationalQualification = educationalQualificationField.getText();
-        String workExperience = workExperienceField.getText();
-        String baseSalary = baseSalaryField.getText();
+        String jobTitle = jobTitleField.getText().trim();
+        String jobDescription = jobDescriptionArea.getText().trim();
+        String jobRequirements = jobRequirementsArea.getText().trim();
+        String educationalQualification = educationalQualificationField.getText().trim();
+        String workExperience = workExperienceField.getText().trim();
+        String baseSalary = baseSalaryField.getText().trim();
 
         if (jobTitle.isEmpty() || jobDescription.isEmpty() || jobRequirements.isEmpty() ||
                 educationalQualification.isEmpty() || workExperience.isEmpty() || baseSalary.isEmpty()) {
             JOptionPane.showMessageDialog(contentPane, "All fields must be filled out.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if (!isNumeric(workExperience)) {
+            JOptionPane.showMessageDialog(contentPane, "Work Experience must be a valid number.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if (!isNumeric(baseSalary)) {
+            JOptionPane.showMessageDialog(contentPane, "Base Salary must be a valid number.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -130,7 +140,6 @@ public class AddJobPage extends JFrame {
             pstmt.executeUpdate();
 
             JOptionPane.showMessageDialog(contentPane, "Job added successfully.");
-            //employerPage.refreshJobs();
             employerPage.setVisible(true);
             this.dispose(); // Close the add job page
         } catch (SQLException e) {
@@ -144,6 +153,15 @@ public class AddJobPage extends JFrame {
                     e.printStackTrace();
                 }
             }
+        }
+    }
+
+    private boolean isNumeric(String str) {
+        try {
+            Double.parseDouble(str);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
         }
     }
 

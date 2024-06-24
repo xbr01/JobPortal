@@ -20,6 +20,11 @@ public class EmployeePage extends JFrame {
     private String employeeName;
 
     public EmployeePage(Main loginPage, int userId) {
+
+        if (loginPage == null) {
+            throw new IllegalArgumentException("Login page cannot be null");
+        }
+
         this.loginPage = loginPage;
         this.userId = userId;
         this.employeeName = getEmployeeName(userId);
@@ -42,13 +47,13 @@ public class EmployeePage extends JFrame {
 
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 
-        JButton showNotificationsButton = new JButton("Show Notifications");
-        showNotificationsButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                showNotificationsPage();
-            }
-        });
-        bottomPanel.add(showNotificationsButton);
+        // JButton showNotificationsButton = new JButton("Show Notifications");
+        // showNotificationsButton.addActionListener(new ActionListener() {
+        //     public void actionPerformed(ActionEvent e) {
+        //         showNotificationsPage();
+        //     }
+        // });
+        // bottomPanel.add(showNotificationsButton);
 
         JButton showAppliedJobsButton = new JButton("Show Applied Jobs");
         showAppliedJobsButton.addActionListener(new ActionListener() {
@@ -167,10 +172,10 @@ public class EmployeePage extends JFrame {
         this.setVisible(false);
     }
 
-    private void showNotificationsPage() {
-        NotificationPage notificationPage = new NotificationPage(employeeName);
-        notificationPage.setVisible(true);
-    }
+    // private void showNotificationsPage() {
+    //     NotificationPage notificationPage = new NotificationPage(employeeName);
+    //     notificationPage.setVisible(true);
+    // }
 
     public static void main(String[] args) {
         Main loginPage = new Main(); // Replace with your actual login page instance

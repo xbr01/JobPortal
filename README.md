@@ -14,18 +14,18 @@ sqlite3 database\
 Login\
 Register\
 Logout\
-Landing page\
+Landing page
 
 ### Employer:
 Add job\
 view job requests\
 Accept/Decline job request\
-view job accepted job requests\
+view job accepted job requests
 
 ### User:
-View jobs
-Apply for job
-View user profile
+View jobs\
+Apply for job\
+View user profile\
 Show applied jobs
 
 

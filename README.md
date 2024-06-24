@@ -6,7 +6,7 @@ Project done as part of java sem project
 Java\
 JDBC\
 Swing\
-sqlite3 database\
+sqlite3 database
 
 ## Funtionalities
 
